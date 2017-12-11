@@ -1,6 +1,6 @@
 # TetrisMusic
 
-The music code for a Tetris game programmed for an STM32F401RE. The full project is elsewhere...
+Music code for a Tetris game programmed on an STM32F401RE microcontroller. The full project is elsewhere...
 
 ---------------
 How it works:
