@@ -1,25 +1,56 @@
+/** 
+  * This file contains all of the hardcoded notes, melodies and rhythms
+  * used in main.c to play music. Four complete melodies and three noises
+  * were hardcoded into music.h, followed by an incomplete Guile Theme.
+  *
+  * Music is generated through the use of a PWM signal whose frequency is
+  * modulated at set time increments. Timer 4 (TIM4) manages the PWM signal,
+  * the prescaler in particular controlling the frequency. Calculations were done
+  * in an Excel spreadsheet to determine the approximate quantity of milliseconds
+  * required for each musical note. This was then used to calculate the prescaler
+  * values required for each note, which are found in this file.
+  *
+  * Music is a combination of tempo, notes and note durations, as well as
+  * tone and dynamics. The tone is constant because a PWM signal is used,
+  * and the dynamics are fixed because the duty cycle of the PWM signal is 
+  * fixed. The tempo is defined by the number of quarter notes played per minute,
+  * or BPM. Each song has its own tempo, and the durations of their quarter notes
+  * are defined in main.c. Note durations are then defined as multiples of these
+  * quarter notes. Shorthand macros are defined at the beginning of this file
+  * to make it easier to code the rhythm arrays.
+  *
+  * Scale arrays are defined next, and are used to make it easier to code the
+  * melody arrays. Each melody has an array defining the sequence of notes to
+  * be played, as well as an array defining the duration of each of the notes.
+  *
+  * -Josh Glazer
+  ******************************************************************************
+*/
+
 #ifndef __MUSIC_H
 #define __MUSIC_H
 
-#define WHOL *4
-#define DOTH *3
-#define DOTHS *3 - 50
-#define HALFS *2 - 50
-#define HALF *2
-#define DOTQ *3/2
-#define DOTQS *3/2 - 50
-#define QUARS -50
-#define QUAR *1
-#define DOTES *3/4 - 50
-#define DOTE *3/4
-#define EIGHS /2 - 50
-#define EIGH /2
-#define SIXTS /4 - 50
-#define SIXT /4
-#define STAC 50
-#define TRIPA *2/3 - 50
-#define TRIPB 50
-#define TRIPC /3
+// shorthands for quarter note length multipliers
+
+#define WHOL *4 /* whole note */
+#define DOTH *3 /* dotted half note */
+#define DOTHS *3 - 50 /* staccato dotted half note */
+#define HALFS *2 - 50 /* staccato half note */
+#define HALF *2 /* half note */
+#define DOTQ *3/2 /* dotted quarter note */
+#define DOTQS *3/2 - 50 /* staccato dotted quarter note */
+#define QUARS -50 /* staccato quarter note */
+#define QUAR *1 /* quarter note */
+#define DOTES *3/4 - 50 /* staccato dotted eighth note */
+#define DOTE *3/4  /* dotted eighth note */
+#define EIGHS /2 - 50 /* staccato eighth note */
+#define EIGH /2  /* eighth note */
+#define SIXTS /4 - 50 /* staccato sixteenth note */
+#define SIXT /4  /* sixteenth note */
+#define STAC 50 /* staccato time interval for quarter notes */
+#define TRIPA *2/3 - 50 /* staccato quarter note (?) triplet */
+#define TRIPB 50 /* staccato time interval for triplets */
+#define TRIPC /3 /* quarter note (?) triplet */
 
 const int noiseScale[] = {
 0, // no note
