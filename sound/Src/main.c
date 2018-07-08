@@ -35,6 +35,41 @@
   *
   ******************************************************************************
   */
+
+  ******************************************************************************
+/** 
+  * This file contains all of the microcontroller initializations as well as
+  * the functions responsible for generating music. The notes, melodies and
+  * rhythms are defined in music.h and the functions here control how they are
+  * executed.
+  *
+  * Music is generated through the use of a PWM signal whose frequency is
+  * modulated at set time increments. Timer 4 (TIM4) manages the PWM signal,
+  * the prescaler in particular controlling the frequency. Calculations were done
+  * in an Excel spreadsheet to determine the approximate quantity of milliseconds
+  * required for each musical note. This was then used to calculate the prescaler
+  * values required for each note.
+  
+  * The systick timer, which calls an interrupt every millisecond, is used to
+  * count time. The interrupt counts how many ticks have occurred and increments
+  * the position of the melody and rhythm arrays once the duration of a note has
+  * been reached.
+  
+  * Four complete melodies and three noises were hardcoded into music.h. Each one
+  * has its own tempo. The length of time required for a quarter note is
+  * defined here. A function was built for each melody, but should probably be
+  * abstracted more so one function can play any melody. Another function manages
+  * all of the melodies, repeating a song a certain number of times before switching
+  * to the next, and allows for interrupting the melody with a noise and returning
+  * to where the melody left off once the noise has finished.
+  *
+  * The finalized code for this project is not in this GitHub account. The code
+  * is a fully fleshed out Tetris game that actually implements the noises and music.
+  *
+  * -Josh Glazer
+  ******************************************************************************
+*/
+  
 /* Includes ------------------------------------------------------------------*/
 
 #include "main.h"
