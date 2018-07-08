@@ -42,14 +42,18 @@
 
 /* USER CODE BEGIN Includes */
 
+/* number of systick cycles for the length of time each song's quarter note takes */
+// noises
 const int n1quarter = 600;
 const int n2quarter = 300;
 const int n3quarter = 300;
-const int tquarter = 375;
-const int kquarter = 350;
-const int zquarter = 215;
-const int mquarter = 333;
-const int gquarter = 460;
+//songs
+const int tquarter = 375; // tetris
+const int kquarter = 350; // kirby
+const int zquarter = 215; // zelda
+const int mquarter = 333; // megaman
+const int gquarter = 460; // guile's theme (not complete)
+
 #include "music.h"
 
 /* USER CODE END Includes */
@@ -61,14 +65,14 @@ TIM_HandleTypeDef htim4;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-volatile char sample = 0;
+volatile char sample = 0; // index of the melody note currently being played
 volatile char prevSample;
-volatile int dvp;
-volatile int songEnd = 1;
+volatile int dvp; // number of clock counts note has been played for (david patry)
+volatile int songEnd = 1; // flag for when the melody is finished
 int song;
-int duration;
-int arsize;
-char playMusic = 0;
+int duration; // how long a note should last, in clock cycles
+int arsize; // size of melody/rhythm arrays
+char playMusic = 0; // should music be playing
 const int *scale;
 const char *notes;
 const int *times;
@@ -134,8 +138,8 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 	
-	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
-	playMegaMusic();
+	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1); // initialize pwm
+	playMegaMusic(); // start music
   /* USER CODE END 2 */
   
   /* Infinite loop */
@@ -214,9 +218,11 @@ static void MX_TIM4_Init(void)
   TIM_OC_InitTypeDef sConfigOC;
 
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 0;
+  // prescaler initialized to 0, controls note frequency. it's a hack but at 0
+  // the frequency is so high that it's inaudible, so it works like a rest
+  htim4.Init.Prescaler = 0; 
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 78;
+  htim4.Init.Period = 78; // number of timer counts per pwm period
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
   {
@@ -231,7 +237,7 @@ static void MX_TIM4_Init(void)
   }
 
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 39;
+  sConfigOC.Pulse = 39; // pwm signal stays on for half of the timer period
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -255,31 +261,42 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void HAL_SYSTICK_Callback(void){
+void HAL_SYSTICK_Callback(void){ // interrupt that's called every millisecond
 	if(playMusic){
-		if (sample>=arsize){
-			sample = 0;
-			songEnd = 1;
+		// if music should be playing
+		if (sample>=arsize){ // if the end of the song's melody is reached
+			sample = 0; // reset to beginning of melody
+			songEnd = 1; // set a flag that the song finished
 		}
-		if (dvp>=duration){
-			htim4.Instance->PSC=scale[notes[sample]];
-			duration = times[sample];
-			sample++;
-			dvp=0;
+		if (dvp>=duration){ // if note has played for its full duration
+			htim4.Instance->PSC=scale[notes[sample]]; // set the note's frequency
+			duration = times[sample]; // set the note's duration
+			sample++; // go to the next note
+			dvp=0; // reset the duration counter
 		}
-		dvp++;
+		dvp++; // increment the duration counter
 	}
 }
 
+// these functions all work the same. There's one last important function at the bottom, though
 void playNoise1(void){
-	prevSample = sample;
-	sample=0;dvp=duration-20;songEnd=0;
-	arsize = sizeof(noise1Times)/4;
 	
+	
+	prevSample = sample; // specific to noises, saves last position of music melody so
+		// when the noise is finished the melody restarts from where it had stopped
+	
+	sample=0; // make sure it starts at the beginning of the melody/noise
+	dvp=duration-20; // ??
+	songEnd=0; // the previous song is over but the current song just started
+	arsize = sizeof(noise1Times)/4; // sizeof gives the number of bytes and integers are 4 bytes long
+	
+	// these pointers are assigned to the corresponding scale, melody notes
+	// and melody note durations which are defined in the header file
 	scale=noiseScale;
 	notes=noise1Notes;
 	times=noise1Times;
-	playMusic = 1;
+	
+	playMusic = 1; // makes sure microcontroller starts playing music
 }
 void playNoise2(void){
 	prevSample = sample;
@@ -343,11 +360,12 @@ void playGuileMusic(void){
 	playMusic = 1;
 }
 
-void playTunes(void){
-	static int ctr = 0;
-	int repNumber = 2;
+void playTunes(void){ // cycles through music
+	static int ctr = 0; // how many times the melody has played
+	int repNumber = 2; // how many times does a melody repeat before switching
 	if (songEnd){
-		if (scale!=noiseScale){
+		if (scale!=noiseScale){ // if previous song was a melody
+			// plays each melody in a fixed sequence
 			ctr++;
 			if (ctr<=repNumber)	playTetrisMusic();
 			else if (ctr<=repNumber*2) playKirbyMusic();
@@ -356,9 +374,12 @@ void playTunes(void){
 			else if (ctr<=repNumber*5) playGuileMusic();
 			else ctr = 0;
 		}
-		if (scale == noiseScale){
-			sample=prevSample;/*dvp=0;*/songEnd=0;
-			switch (song){
+		if (scale == noiseScale){ // if previous song was a noise
+			sample=prevSample; // go back to position in the melody that was cut off
+			/*dvp=0;*/
+			songEnd=0; // has to be specified because I don't call the functions above
+			switch (song){ // I don't call the functions above because they start the melody
+					// at the beginning and I didn't implement the code for it
 			case 1:
 				arsize = sizeof(tetrisTimes)/4;
 				scale=tetrisScale;
